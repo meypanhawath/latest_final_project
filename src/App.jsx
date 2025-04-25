@@ -17,6 +17,7 @@ import Sidebar from './components/sidebar/Sidebar';
 import SidebarEmp from './components/sidebar/SidebarEmp'
 import Attendance from './components/attendance/Attendance'
 import LeaveRequest from './components/leaveRequest/LeaveRequest'
+// import ParticlesComponent from './components/particle/particles';
 
 import Card from './components/card/Card';
 import Grid from './components/grid/Grid';
@@ -25,7 +26,7 @@ import { Routes, Route } from "react-router-dom";
 const App = () => {
   return (
     <>
-    
+    {/* <ParticlesComponent id="particles" /> */}
     <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/feature' element={<Feature />} />

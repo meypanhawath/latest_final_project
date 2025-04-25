@@ -14,7 +14,15 @@ const EmpLeave = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    })      
+    }),
+
+      // Update leave request status
+      updateLeave: (token, id, data) =>
+        api.patch(`leaveRequests/${id}`, data, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
 
 };
 

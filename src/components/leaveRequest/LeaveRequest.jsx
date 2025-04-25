@@ -70,56 +70,56 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const initialEmployees = [
-  {
-    id: "I-0001",
-    name: "Jane Cooper",
-    StartDate: "7-April-2015",
-    StartEnd: "7-April-2015",
-    status: "Approve",
-    reason: "Medical leave"
-  },
-  {
-    id: "I-0002",
-    name: "Doe Laly",
-    StartDate: "8-April-2015",
-    StartEnd: "8-April-2015",
-    status: "Deny",
-    reason: "Family emergency"
-  },
-  {
-    id: "I-0003",
-    name: "John reach",
-    StartDate: "8-April-2015",
-    StartEnd: "9-April-2015",
-    status: "Deny",
-    reason: "Personal reasons"
-  },
-  {
-    id: "I-0005",
-    name: "Koko Tesla",
-    StartDate: "8-April-2015",
-    StartEnd: "9-April-2015",
-    status: "Pending",
-    reason: "Vacation"
-  },
-  {
-    id: "I-0006",
-    name: "Jack bot",
-    StartDate: "8-April-2015",
-    StartEnd: "20-April-2015",
-    status: "Pending",
-    reason: "Work from home"
-  },
-  {
-    id: "I-0007",
-    name: "Mic Roza",
-    StartDate: "8-April-2015",
-    StartEnd: "21-April-2015",
-    status: "Pending",
-    reason: "Conference attendance"
-  },
-];
+// const initialEmployees = [
+//   {
+//     id: "I-0001",
+//     name: "Jane Cooper",
+//     StartDate: "7-April-2015",
+//     StartEnd: "7-April-2015",
+//     status: "Approve",
+//     reason: "Medical leave"
+//   },
+//   {
+//     id: "I-0002",
+//     name: "Doe Laly",
+//     StartDate: "8-April-2015",
+//     StartEnd: "8-April-2015",
+//     status: "Deny",
+//     reason: "Family emergency"
+//   },
+//   {
+//     id: "I-0003",
+//     name: "John reach",
+//     StartDate: "8-April-2015",
+//     StartEnd: "9-April-2015",
+//     status: "Deny",
+//     reason: "Personal reasons"
+//   },
+//   {
+//     id: "I-0005",
+//     name: "Koko Tesla",
+//     StartDate: "8-April-2015",
+//     StartEnd: "9-April-2015",
+//     status: "Pending",
+//     reason: "Vacation"
+//   },
+//   {
+//     id: "I-0006",
+//     name: "Jack bot",
+//     StartDate: "8-April-2015",
+//     StartEnd: "20-April-2015",
+//     status: "Pending",
+//     reason: "Work from home"
+//   },
+//   {
+//     id: "I-0007",
+//     name: "Mic Roza",
+//     StartDate: "8-April-2015",
+//     StartEnd: "21-April-2015",
+//     status: "Pending",
+//     reason: "Conference attendance"
+//   },
+// ];
 
 const PendingCard = ({ selectedRequest, closeModal, onStatusChange }) => {
   return (
@@ -133,21 +133,21 @@ const PendingCard = ({ selectedRequest, closeModal, onStatusChange }) => {
         </div>
 
         <div className="mt-4 flex justify-between mb-4">
-          <p>ID: {selectedRequest.id}</p>
+          <p>ID : {selectedRequest.id}</p>
           <div className="flex gap-2">
             <button
-              type="button"
+              type="button" 
               className="px-4 py-2 bg-green-100 text-green-700 border border-green-700 rounded-md hover:bg-green-200 transition-colors md:mr-1 cursor-pointer"
-              onClick={() => onStatusChange("Approve")}
+              onClick={() => onStatusChange("APPROVED")}
             >
               Approve
             </button>
             <button
               type="button"
               className="px-4 py-2 bg-red-100 text-red-700 border border-red-700 rounded-md hover:bg-red-200 transition-colors md:mr-10 cursor-pointer"
-              onClick={() => onStatusChange("Deny")}
+              onClick={() => onStatusChange("REJECTED")}
             >
-              Deny
+              Reject
             </button>
           </div>
         </div>
@@ -156,7 +156,7 @@ const PendingCard = ({ selectedRequest, closeModal, onStatusChange }) => {
           <div className="flex items-center">
             <label className="text-sm font-medium text-gray-700 w-24">Name</label>
             <input
-              value={selectedRequest.name}
+              value={selectedRequest.employee.firstName + " " + selectedRequest.employee.lastName}
               className="w-full md:w-[71%] rounded-md border border-gray-200 px-3 py-1.5 bg-gray-50"
               readOnly
             />
@@ -165,7 +165,7 @@ const PendingCard = ({ selectedRequest, closeModal, onStatusChange }) => {
           <div className="flex items-center">
             <label className="text-sm font-medium text-gray-700 w-24">Start Date</label>
             <input
-              value={selectedRequest.StartDate}
+              value={selectedRequest.startDate}
               className="w-full md:w-[71%] rounded-md border border-gray-200 px-3 py-1.5 bg-gray-50"
               readOnly
             />
@@ -174,7 +174,7 @@ const PendingCard = ({ selectedRequest, closeModal, onStatusChange }) => {
           <div className="flex items-center">
             <label className="text-sm font-medium text-gray-700 w-24">End Date</label>
             <input
-              value={selectedRequest.StartEnd}
+              value={selectedRequest.endDate}
               className="w-full md:w-[71%] rounded-md border border-gray-200 px-3 py-1.5 bg-gray-50"
               readOnly
             />
@@ -199,40 +199,78 @@ function LeaveRequest() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showPendingCard, setShowPendingCard] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [employees, setEmployees] = useState(initialEmployees);
+  // const [employees] = useState([]);
   const navigate = useNavigate();
 
-  const handleStatusUpdate = (id, newStatus) => {
-    setEmployees(prevEmployees =>
-      prevEmployees.map(emp =>
-        emp.id === id ? { ...emp, status: newStatus } : emp
-      )
-    );
-    setShowPendingCard(false);
-  };
+  // const handleStatusUpdate = (id, newStatus) => {
+  //   setEmployees(prevEmployees =>
+  //     prevEmployees.map(emp =>
+  //       emp.id === id ? { ...emp, status: newStatus } : emp
+  //     )
+  //   );
+  //   setShowPendingCard(false);
+  // };
 
-  const openPendingCard = (employee) => {
-    if (employee.status === "Pending") {
-      setSelectedRequest(employee);
-      setShowPendingCard(true);
-    }
-  };
+
+
+// Open the modal for a pending request
+const openPendingCard = (request) => {
+  if (request.status?.toLowerCase() === "pending") {
+    setSelectedRequest(request);
+    setShowPendingCard(true);
+  }
+};
+
+// Close modal (and clear selection)
+const closeModal = () => {
+  setShowPendingCard(false);
+  setSelectedRequest(null);
+};
+
+// Approve/Deny: persist to server then update UI
+const handleStatusChange = (newStatus) => {
+  const token = localStorage.getItem("accessToken");
+
+  console.log("access Token: ", token);
+
+  EmpLeave
+    .updateLeave(token, selectedRequest.id, { status: newStatus })
+    .then(() => {
+      // update local list
+      setLeave(prev =>
+        prev.map(r =>
+          r.id === selectedRequest.id
+            ? { ...r, status: newStatus }
+            : r
+        )
+      );
+      closeModal(); // clean close
+    })
+    .catch(err => {
+      console.error("Failed to update status:", err);
+      // TODO: show toast/alert
+    });
+};
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     setShowLogoutModal(false);
     navigate("/");
+
   };
 
   const [leaveRequests, setLeave] = useState([]);
 
   useEffect(() => {
     let accessToken = localStorage.getItem("accessToken");
-    EmpLeave.getAllLeave(accessToken, - 1, 6)
+    EmpLeave.getAllLeave(accessToken, 0, 100)
       .then((response) => {
         console.log("Getting all Leave: ", response.data);
   
@@ -242,6 +280,8 @@ function LeaveRequest() {
             att._links.employee.href
           ).then((res) => {
             att.employee = res.data; // Add employee data to the attendance object
+            const href = att._links.self.href;
+            att.id = href.substring(href.lastIndexOf("/") + 1);
             return att; // Return the enriched attendance object
           })
         );
@@ -261,20 +301,44 @@ function LeaveRequest() {
       });
   }, []);
 
+  const filteredEmployees = leaveRequests.filter((emp) => {
+    const term = searchTerm.toLowerCase();
+    const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
+    const deptName = (emp.department?.name || "").toLowerCase();
+    return fullName.includes(term) || deptName.includes(term);
+  });
+  
+  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+  const indexOfLastEmployee = currentPage * itemsPerPage;
+  const indexOfFirstEmployee = indexOfLastEmployee - itemsPerPage;
+  const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
+
+  useEffect(() => {
+    if (searchTerm) {
+      setCurrentPage(1); // Reset to the first page when searching
+    }
+  }, [searchTerm]);
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(i);
+    }
+    return pageNumbers;
+  };
+
   
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
       {/* Pending Card Modal */}
-      {showPendingCard && (
-        <PendingCard
-          selectedRequest={selectedRequest}
-          closeModal={() => setShowPendingCard(false)}
-          onStatusChange={(newStatus) =>
-            handleStatusUpdate(selectedRequest.id, newStatus)
-          }
-        />
-      )}
+      {showPendingCard && selectedRequest && (
+  <PendingCard
+    selectedRequest={selectedRequest}
+    closeModal={closeModal}
+    onStatusChange={handleStatusChange}
+  />
+)}
 
       {/* Overlay for Mobile Sidebar */}
       {isSidebarOpen && (
@@ -397,8 +461,10 @@ function LeaveRequest() {
                   </span>
                   <input
                     type="text"
-                    placeholder="Search employees"
-                    className="w-full sm:w-48 md:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="name or department"
+                    className="w-full sm:w-48 md:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-color focus:border-transparent"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
                 
@@ -426,52 +492,69 @@ function LeaveRequest() {
                   </tr>
                 </thead>
                 <tbody className="block md:table-row-group">
-                    {/* <tr className="block md:table-row">
-                      <td colSpan="6" className="px-4 py-6 text-center text-gray-500">
-                        No employees found
-                      </td>
-                    </tr> */}
-                  {leaveRequests.map((leaveRequests) => (
-                    <tr
-                      key={leaveRequests.id}
-                      onClick={() => openPendingCard(leaveRequests)}
-                      className={`hover:bg-gray-50 ${
-                        leaveRequests.status === "Pending" ? "cursor-pointer" : "cursor-default"
-                      }`}
-                    >
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 block md:table-cell">
-                        {leaveRequests.employee.firstName + " " + leaveRequests.employee.lastName}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 block md:table-cell">
-                        {leaveRequests.startDate}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 truncate max-w-xs block md:table-cell">
-                        {leaveRequests.endDate}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm block md:table-cell">
-                        <StatusBadge status={leaveRequests.status} />
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm block md:table-cell">
-                        {leaveRequests.reason} 
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+  {currentEmployees.map((emp, id) => (
+    <tr
+      key={id}
+      onClick={() => openPendingCard(emp)}
+      className="cursor-pointer hover:bg-gray-100 transition-colors block md:table-row"
+    >
+      <td className="px-4 py-3 block md:table-cell">
+        {emp.employee?.firstName} {emp.employee?.lastName}
+      </td>
+      <td className="px-4 py-3 block md:table-cell">{emp.startDate}</td>
+      <td className="px-4 py-3 block md:table-cell">{emp.endDate}</td>
+      <td className="px-4 py-3 block md:table-cell">
+        <StatusBadge status={emp.status} />
+      </td>
+      <td className="px-4 py-3 block md:table-cell truncate">{emp.reason}</td>
+    </tr>
+  ))}
+</tbody>
               </table>
             </div>
 
             {/* Pagination */}
-            <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:mt-6 pt-4 border-t border-gray-200">
-              <p className="text-xs sm:text-sm text-gray-600 mb-3 md:mb-0">
-                Showing {employees.length} of {employees.length} entries
-              </p>
-              <nav className="flex items-center space-x-1 flex-wrap justify-center">
-                {/* Pagination buttons remain same */}
-              </nav>
-            </div>
-          </div>
-        </main>
-      </div>
+                        <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:mt-6 pt-4 border-t border-gray-200">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-3 md:mb-0">
+                            Showing {indexOfFirstEmployee + 1} to{" "}
+                            {Math.min(indexOfLastEmployee, filteredEmployees.length)} of{" "}
+                            {filteredEmployees.length} entries
+                          </p>
+                          <nav className="flex items-center space-x-1 flex-wrap justify-center">
+                            <button
+                              onClick={() => setCurrentPage(currentPage - 1)}
+                              disabled={currentPage === 1}
+                              className="px-2.5 py-1 border border-gray-300 rounded-md text-sm text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <HiOutlineChevronLeft className="w-4 h-4" />
+                            </button>
+            
+                            {getPageNumbers().map((number) => (
+              <button
+                key={number}
+                onClick={() => setCurrentPage(number)}
+                className={`px-2.5 py-1 border rounded-md text-sm ${
+                  currentPage === number
+                    ? "border-blue-600 bg-blue-600 text-white"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {number}
+              </button>
+            ))}
+            
+                            <button
+                              onClick={() => setCurrentPage(currentPage + 1)}
+                              disabled={currentPage === totalPages}
+                              className="px-2.5 py-1 border border-gray-300 rounded-md text-sm text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <HiOutlineChevronRight className="w-4 h-4" />
+                            </button>
+                          </nav>
+                        </div>
+                      </div>
+                    </main>
+                  </div>
 
       {/* Logout Modal */}
       {showLogoutModal && (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+
 import {
   HiOutlineViewGrid,
   HiOutlineUsers,
@@ -18,6 +19,7 @@ import {
 import EmpService from "../../services/empService";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
+import BlinkBlur from "../animation/BlinkBlur";
 
 // --- Reusable Components ---
 const SidebarItem = ({ icon, text, active, href = "#", onClick, arrowIcon }) => {
@@ -79,50 +81,49 @@ function EmployeeInfo() {
   const [employees, setEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 100;
   const navigate = useNavigate();
 
   useEffect(() => {
     let accessToken = localStorage.getItem("accessToken");
     EmpService.getAllEmployee(accessToken, currentPage - 1, itemsPerPage)
       .then((response) => {
-        console.log("Getting all Employee: ", response.data);
-
+        console.log("API Response:", response.data);
         const employeePromises = response.data._embedded.employees.map((emp) =>
           EmpService.getEmployeeInfo(accessToken, emp._links.department.href).then((res) => {
-            emp.department = res.data; // Add employee data to the object
+            emp.department = res.data; // Add department data to the employee object
             return emp; // Return the enriched employee object
           })
         );
-
-        // Wait for all API calls to complete
+  
         Promise.all(employeePromises)
           .then((enrichedEmployees) => {
-            console.log("Final enriched Employees: ", enrichedEmployees);
+            console.log("Enriched Employees:", enrichedEmployees);
             setEmployees(enrichedEmployees); // Update state with all enriched employees
           })
           .catch((error) => {
-            console.error("Error enriching Employees: ", error);
+            console.error("Error enriching Employees:", error);
           });
       })
       .catch((error) => {
-        console.error("Error fetching employees: ", error);
+        console.error("Error fetching employees:", error);
       });
   }, [currentPage]);
 
   const validationSchema = Yup.object({
+    
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
     email: Yup.string().email("Invalid email address").required("Email is required"),
     phone: Yup.string().matches(/^\d+$/, "Phone number must be numeric").required("Phone number is required"),
     dateOfJoining: Yup.string().required("Date of Joining is required"),
-    status: Yup.string().required(["ACTIVE", "INACTIVE", "RESIGNED"]).required("Status is required"),
+    status: Yup.string().required("Status is required"),
     department: Yup.string().required("Department is required"),
   });
 
   const filteredEmployees = employees.filter((emp) => {
     const term = searchTerm.toLowerCase();
-    const fullName = `${emp.firstName} || ${emp.lastName}`.toLowerCase();
+    const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
     const deptName = (emp.department?.name || "").toLowerCase();
     return fullName.includes(term) || deptName.includes(term);
   });
@@ -133,8 +134,44 @@ function EmployeeInfo() {
   const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
 
   useEffect(() => {
-    setCurrentPage(1);
+    if (searchTerm) {
+      setCurrentPage(1); // Reset to the first page when searching
+    }
   }, [searchTerm]);
+
+  const handleDeleteEmployee = (id) => {
+    console.log("Deleting employee with ID:", id); // Check if ID is passed correctly
+    
+    if (!id) {
+      console.error("Employee ID is undefined!");
+      alert("Invalid employee ID. Please try again.");
+      return;
+    }
+  
+    const accessToken = localStorage.getItem("accessToken");
+  
+    if (!accessToken) {
+      alert("Access token is missing. Please log in.");
+      return;
+    }
+  
+    console.log("Access Token:", accessToken); // Check if the token is correct
+    
+    if (window.confirm("Are you sure you want to delete this employee?")) {
+      EmpService.deleteEmployee(accessToken, id)  // Call the service method
+        .then(() => {
+          alert("Employee deleted successfully.");
+          setEmployees((prevEmployees) =>
+            prevEmployees.filter((employee) => employee.id !== id)
+          );
+        })
+        .catch((error) => {
+          console.error("Error deleting employee:", error.response?.data || error.message);
+          alert("Failed to delete employee. Please try again.");
+        });
+    }
+  };
+  
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
@@ -286,12 +323,13 @@ function EmployeeInfo() {
 
                   <Formik
                     initialValues={{
+                      
                       firstName: "",
                       lastName: "",
                       email: "",
                       phone: "",
                       dateOfJoining: "",
-                      status: "Active",
+                      status: "",
                       department: "",
                     }}
                     validationSchema={validationSchema}
@@ -305,12 +343,13 @@ function EmployeeInfo() {
 
                       axios.post("https://eam-api.istad.co/employees",
                           {
+                            
                             firstName: values.firstName,
                             lastName: values.lastName,
                             email: values.email,
                             phone: values.phone,
                             dateOfJoining: values.dateOfJoining,
-                            status: values.status.toUpperCase(),
+                            status: values.status,
                             department: `/departments/${values.department}`,
                           },
                           {
@@ -321,8 +360,17 @@ function EmployeeInfo() {
                           }
                         )
                         .then((response) => {
-                          console.log("Employee added successfully:", response.data);
-                          setEmployees((prevEmployees) => [...prevEmployees, response.data]);
+                          const newEmp = response.data;
+                          // fetch the full department object
+                          return EmpService
+                            .getEmployeeInfo(accessToken, newEmp._links.department.href)
+                            .then((depRes) => {
+                              newEmp.department = depRes.data;
+                              return newEmp;
+                            });
+                        })
+                        .then((enrichedEmp) => {
+                          setEmployees((prev) => [...prev, enrichedEmp]);
                           setShowAddModal(false);
                           resetForm();
                         })
@@ -341,11 +389,28 @@ function EmployeeInfo() {
                     {({ isSubmitting, errors, touched }) => (
                       <Form>
                         <div className="space-y-4">
+                        {/* <div>
+   <label className="block text-sm font-medium text-gray-700">
+     Employee ID
+   </label>
+   <Field
+     name="id"
+     type="number"
+     placeholder="Enter Employee ID"
+     className={`w-full px-3 py-2 border ${
+       errors.id && touched.id ? "border-red-500" : "border-gray-300"
+     } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+   />
+   {errors.id && touched.id && (
+     <p className="text-red-500 text-sm">{errors.id}</p>
+   )}
+ </div> */}
                           <div>
                             <label className="block text-sm font-medium text-gray-700">
                               First Name
                             </label>
                             <Field
+                              
                               name="firstName"
                               type="text"
                               placeholder="Enter First Name"
@@ -441,10 +506,11 @@ function EmployeeInfo() {
                               Status
                             </label>
                             <Field
-                                name="department"
+                                name="status"
                                 as="select"
                                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                               >
+                                <option value="">Select Status</option>
                                 <option value="ACTIVE">ACTIVE</option>
                                 <option value="INACTIVE">INACTIVE</option>
                                 <option value="RESIGNED">RESIGNED</option>
@@ -463,6 +529,7 @@ function EmployeeInfo() {
                                 as="select"
                                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                               >
+                                <option value="">Select Department</option>
                                 <option value="1">HR</option>
                                 <option value="2">IT</option>
                                 <option value="3">Finance</option>
@@ -488,7 +555,7 @@ function EmployeeInfo() {
                             disabled={isSubmitting}
                             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                           >
-                            {isSubmitting ? "Adding..." : "Add"}
+                            {isSubmitting ? <BlinkBlur color="#0800cb" size="medium" text="" textColor="" /> : "Add"}
                           </button>
                         </div>
                         
@@ -522,35 +589,46 @@ function EmployeeInfo() {
                     </th>
                   </tr>
                   </thead>
-                <tbody className="block md:table-row-group">
-                  {currentEmployees.length === 0 ? (
-                    <tr className="block md:table-row">
-                      <td colSpan="6" className="px-4 py-6 text-center text-gray-500">
-                        No employees found
-                      </td>
-                    </tr>
-                  ) : (
-                    employees.map((employee) => (
-                      <tr key={employee.id} className="border-b border-gray-200 block md:table-row hover:bg-gray-50">
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 block md:table-cell">
-                          {employee.firstName + " " + employee.lastName}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 block md:table-cell">
-                          {employee.department.name}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 truncate max-w-xs block md:table-cell">
-                          {employee.email}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 block md:table-cell">
-                          {employee.dateOfJoining}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm block md:table-cell">
-                          <StatusBadge status={employee.status} />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
+                  <tbody className="block md:table-row-group">
+  {currentEmployees.length === 0 ? (
+    <tr className="block md:table-row">
+      <td colSpan="6" className="px-4 py-6 text-center text-gray-500">
+        No employees found
+      </td>
+    </tr>
+  ) : (
+    currentEmployees.map((employee) => (
+      <tr key={employee.id} className="border-b border-gray-200 block md:table-row hover:bg-gray-50">
+        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 block md:table-cell">
+          {employee.firstName + " " + employee.lastName}
+        </td>
+        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 block md:table-cell">
+          {employee.department.name}
+        </td>
+        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 truncate max-w-xs block md:table-cell">
+          {employee.email}
+        </td>
+        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 block md:table-cell">
+          {employee.dateOfJoining}
+        </td>
+        <td className="px-4 py-4 whitespace-nowrap text-sm block md:table-cell">
+          <StatusBadge status={employee.status} />
+        </td>
+        <td className="px-4 py-4 whitespace-nowrap text-sm block md:table-cell">
+        <button
+  onClick={() => {
+    console.log("Deleting employee with ID:", employee.id);
+    handleDeleteEmployee(employee.id);
+  }}
+  className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+>
+  Delete
+</button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
               </table>
             </div>
             
@@ -574,18 +652,18 @@ function EmployeeInfo() {
                 </button>
 
                 {getPageNumbers().map((number) => (
-                  <button
-                    key={number}
-                    onClick={() => setCurrentPage(number)}
-                    className={`px-2.5 py-1 border rounded-md text-sm ${
-                      currentPage === number
-                        ? "border-blue-600 bg-blue-600 text-white"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    {number}
-                  </button>
-                ))}
+  <button
+    key={number}
+    onClick={() => setCurrentPage(number)}
+    className={`px-2.5 py-1 border rounded-md text-sm ${
+      currentPage === number
+        ? "border-blue-600 bg-blue-600 text-white"
+        : "border-gray-300 text-gray-700 hover:bg-gray-100"
+    }`}
+  >
+    {number}
+  </button>
+))}
 
                 <button
                   onClick={() => setCurrentPage(currentPage + 1)}

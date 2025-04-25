@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://eam-api.istad.co/',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
