@@ -134,6 +134,7 @@ const PendingCard = ({ selectedRequest, closeModal, onStatusChange }) => {
 
         <div className="mt-4 flex justify-between mb-4">
           <p>ID : {selectedRequest.id}</p>
+          
           <div className="flex gap-2">
             <button
               type="button" 
@@ -238,22 +239,24 @@ const handleStatusChange = (newStatus) => {
   console.log("access Token: ", token);
 
   EmpLeave
-    .updateLeave(token, selectedRequest.id, { status: newStatus })
-    .then(() => {
-      // update local list
-      setLeave(prev =>
-        prev.map(r =>
-          r.id === selectedRequest.id
-            ? { ...r, status: newStatus }
-            : r
-        )
-      );
-      closeModal(); // clean close
-    })
-    .catch(err => {
-      console.error("Failed to update status:", err);
-      // TODO: show toast/alert
-    });
+  .updateLeave(token, selectedRequest.id, { status: newStatus })
+  .then(() => {
+    setLeave(prev =>
+      prev.map(r =>
+        r.id === selectedRequest.id
+          ? { ...r, status: newStatus }
+          : r
+      )
+    );
+  })
+  .catch(err => {
+    console.error("Failed to update status:", err);
+    // optionally show an error message
+  })
+  .finally(() => {
+    closeModal(); // Always close the modal
+  });
+    
 };
 
   const closeSidebar = () => setIsSidebarOpen(false);
@@ -308,7 +311,7 @@ const handleStatusChange = (newStatus) => {
     return fullName.includes(term) || deptName.includes(term);
   });
   
-  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+  // const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const indexOfLastEmployee = currentPage * itemsPerPage;
   const indexOfFirstEmployee = indexOfLastEmployee - itemsPerPage;
   const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
@@ -319,13 +322,13 @@ const handleStatusChange = (newStatus) => {
     }
   }, [searchTerm]);
 
-  const getPageNumbers = () => {
-    const pageNumbers = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pageNumbers.push(i);
-    }
-    return pageNumbers;
-  };
+  // const getPageNumbers = () => {
+  //   const pageNumbers = [];
+  //   for (let i = 1; i <= totalPages; i++) {
+  //     pageNumbers.push(i);
+  //   }
+  //   return pageNumbers;
+  // };
 
   
 
@@ -351,7 +354,7 @@ const handleStatusChange = (newStatus) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300pa ease-in-out flex flex-col ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:relative lg:translate-x-0 lg:flex lg:flex-shrink-0 lg:shadow-md lg:z-auto`}
       >
@@ -514,7 +517,7 @@ const handleStatusChange = (newStatus) => {
             </div>
 
             {/* Pagination */}
-                        <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:mt-6 pt-4 border-t border-gray-200">
+                        {/* <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:mt-6 pt-4 border-t border-gray-200">
                           <p className="text-xs sm:text-sm text-gray-600 mb-3 md:mb-0">
                             Showing {indexOfFirstEmployee + 1} to{" "}
                             {Math.min(indexOfLastEmployee, filteredEmployees.length)} of{" "}
@@ -551,7 +554,7 @@ const handleStatusChange = (newStatus) => {
                               <HiOutlineChevronRight className="w-4 h-4" />
                             </button>
                           </nav>
-                        </div>
+                        </div> */}
                       </div>
                     </main>
                   </div>

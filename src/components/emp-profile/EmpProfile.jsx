@@ -103,7 +103,7 @@ const EmpProfile = () => {
               <div className="flex items-center">
                 <img src={Profile} alt="Profile" className="w-12 h-12 rounded-full mr-4" />
                 <div>
-                  <h3 className="text-lg font-semibold">{personalInfo.firstName}</h3>
+                  <h3 className="text-lg font-semibold">{personalInfo.firstName + " " + personalInfo.lastName}</h3>
                   <p className="text-sm text-gray-500">ID H-0003</p>
                 </div>
               </div>

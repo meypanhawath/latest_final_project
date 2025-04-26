@@ -10,7 +10,7 @@ import {
   HiOutlineLogout,
   HiOutlineSearch,
   HiOutlineBell,
-  HiOutlineChevronDown,
+
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
   HiX,
@@ -22,8 +22,7 @@ import * as Yup from "yup";
 import BlinkBlur from "../animation/BlinkBlur";
 
 // --- Reusable Components ---
-const SidebarItem = ({ icon, text, active, href = "#", onClick, arrowIcon }) => {
-  const ArrowIcon = arrowIcon || HiOutlineChevronDown;
+const SidebarItem = ({ icon, text, active, href = "#", onClick }) => {
   return (
     <a
       href={href}
@@ -40,12 +39,12 @@ const SidebarItem = ({ icon, text, active, href = "#", onClick, arrowIcon }) => 
         }`,
       })}
       <span className="truncate">{text}</span>
-      <ArrowIcon
-        className={`w-4 h-4 ml-auto text-gray-400 ${
-          active ? "text-white" : "opacity-0 group-hover:opacity-100"
-        } transition-opacity`}
-      />
-    </a>
+          <HiOutlineChevronRight
+            className={`w-4 h-4 ml-auto text-gray-400 ${
+              active ? "text-white" : "opacity-0 group-hover:opacity-100"
+            } transition-opacity`}
+          />
+        </a>
   );
 };
 
@@ -86,7 +85,7 @@ function EmployeeInfo() {
 
   useEffect(() => {
     let accessToken = localStorage.getItem("accessToken");
-    EmpService.getAllEmployee(accessToken, currentPage - 1, itemsPerPage)
+    EmpService.getAllEmployee(accessToken, currentPage - 1, 100)
       .then((response) => {
         console.log("API Response:", response.data);
         const employeePromises = response.data._embedded.employees.map((emp) =>
@@ -111,7 +110,7 @@ function EmployeeInfo() {
   }, [currentPage]);
 
   const validationSchema = Yup.object({
-    
+    id: Yup.number().required("Employee ID is required"),
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
     email: Yup.string().email("Invalid email address").required("Email is required"),
@@ -144,7 +143,7 @@ function EmployeeInfo() {
     
     if (!id) {
       console.error("Employee ID is undefined!");
-      alert("Invalid employee ID. Please try again.");
+      alert("Are you sure you want to delete this employee?");
       return;
     }
   
@@ -323,7 +322,7 @@ function EmployeeInfo() {
 
                   <Formik
                     initialValues={{
-                      
+                      id: "",
                       firstName: "",
                       lastName: "",
                       email: "",
@@ -343,7 +342,7 @@ function EmployeeInfo() {
 
                       axios.post("https://eam-api.istad.co/employees",
                           {
-                            
+                            id: values.id,
                             firstName: values.firstName,
                             lastName: values.lastName,
                             email: values.email,
@@ -389,7 +388,7 @@ function EmployeeInfo() {
                     {({ isSubmitting, errors, touched }) => (
                       <Form>
                         <div className="space-y-4">
-                        {/* <div>
+                        <div>
    <label className="block text-sm font-medium text-gray-700">
      Employee ID
    </label>
@@ -404,7 +403,7 @@ function EmployeeInfo() {
    {errors.id && touched.id && (
      <p className="text-red-500 text-sm">{errors.id}</p>
    )}
- </div> */}
+ </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700">
                               First Name
@@ -576,7 +575,6 @@ function EmployeeInfo() {
                     </th>
                     <th className="w-50 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider items-center block md:table-cell">
                       Department
-                      <HiOutlineChevronDown className="w-4 h-4 ml-1 inline-block md:hidden" />
                     </th>
                     <th className="w-90 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider block md:table-cell">
                       Email
@@ -637,19 +635,19 @@ function EmployeeInfo() {
 
             {/* Pagination */}
             <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:mt-6 pt-4 border-t border-gray-200">
-              <p className="text-xs sm:text-sm text-gray-600 mb-3 md:mb-0">
-                Showing {indexOfFirstEmployee + 1} to{" "}
-                {Math.min(indexOfLastEmployee, filteredEmployees.length)} of{" "}
-                {filteredEmployees.length} entries
-              </p>
-              <nav className="flex items-center space-x-1 flex-wrap justify-center">
-                <button
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-2.5 py-1 border border-gray-300 rounded-md text-sm text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <HiOutlineChevronLeft className="w-4 h-4" />
-                </button>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-3 md:mb-0">
+                            Showing {indexOfFirstEmployee + 1} to{" "}
+                            {Math.min(indexOfLastEmployee, filteredEmployees.length)} of{" "}
+                            {filteredEmployees.length} entries
+                          </p>
+                          <nav className="flex items-center space-x-1 flex-wrap justify-center">
+                            <button
+                              onClick={() => setCurrentPage(currentPage - 1)}
+                              disabled={currentPage === 1}
+                              className="px-2.5 py-1 border border-gray-300 rounded-md text-sm text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <HiOutlineChevronLeft className="w-4 h-4" />
+                            </button>
 
                 {getPageNumbers().map((number) => (
   <button
